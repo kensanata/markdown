@@ -552,18 +552,18 @@ possible, but generally a bad idea:
 ### \subsecname
 #### The Lunamark Library
 
-The modified version of Lunamark:
+The modified version of Lunamark produces a parse tree rather than presentation
+markup:
 
-  * produces a parse tree rather than presentation markup:
-    ```markdown
-    # Heading
-    This is [a link](#link).
-    ```
-    \becomes
-    ```tex
-    \markdownRendererHeadingOne{Heading}
-    This is \markdownRendererLink{a link}{#link}{#link}{}.
-    ```
+```markdown
+# Heading
+This is [a link](#link).
+```
+\becomes
+```tex
+\markdownRendererHeadingOne{Heading}
+This is \markdownRendererLink{a link}{#link}{#link}{}.
+```
 
 The Markdown \TeX{} package:
 
