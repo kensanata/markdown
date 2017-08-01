@@ -1,0 +1,36 @@
+\input markdown %
+\input miniltx %
+\input graphicx.sty %
+
+\def\markdownOptionContentBlocks{true}
+
+\begingroup
+\catcode`\@=11
+\catcode`\%=12
+\catcode`\^^A=14
+\global\def\markdownRendererImage#1#2#3#4{^^A
+\immediate\write18{^^A
+  if printf '%s' "#3" | grep -q ^http; then
+    OUTPUT="$(printf '%s' "#3" | md5sum |
+              cut -d' ' -f1).^^A
+            $(printf '%s' "#3" |
+              sed 's/.*[.]//')";
+    if ! [ -e "$OUTPUT" ]; then
+      wget -O "$OUTPUT" '#3' || rm "$OUTPUT";
+      convert "$OUTPUT" png:"$OUTPUT";
+    fi;
+    printf '%s%%' "$OUTPUT" > \jobname.fetched;
+  else
+    printf '%s%%' "#3"      > \jobname.fetched;
+  fi}^^A
+{\everyeof={\noexpand}^^A
+\edef\filename{\@@input"\jobname.fetched" }^^A
+\includegraphics{\filename}\par #4}}
+\endgroup
+
+\markdownBegin
+https://tug.org/tugboat/noword.jpg
+(The Communications of the TeX Users Group)
+\markdownEnd
+
+\bye

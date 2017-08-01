@@ -12,17 +12,88 @@
   fencedCode,
   citations,
   definitionLists,
+  contentBlocks,
+  html,
 ]{markdown}
+\usepackage{ifthen}
 \markdownSetup{
   renderers = {
     emphasis = {\alert{#1}},
+    strongEmphasis = {\emph{#1}},
     headingOne = {\section{#1}},
     headingTwo = {\subsection{#1}},
     headingThree = {\frametitle{#1}},
     headingFour = {\framesubtitle{#1}},
+    headingFive = {%
+      \bigskip
+      {\Large\bfseries#1}
+      \smallskip
+    },
     footnote = {\footnote[frame]{#1}},
+    image = {\citetitle{#1}~\autocite{#1}},
+    contentBlock = {%
+      \ifthenelse{\equal{#1}{csv}}{%
+        \begin{table}%
+          \begin{center}%
+            \csvautotabular{#3}%
+          \end{center}
+          \ifx\empty#4\empty\else
+            \caption{#4}%
+          \fi
+          \label{tab:#1}%
+        \end{table}%
+      }{%
+        \ifthenelse{\equal{#1}{png}}{%
+          \begin{figure}%
+            \begin{center}%
+              \includegraphics[width=0.75\textwidth]{#3}%
+            \end{center}
+            \ifx\empty#4\empty\else
+              \caption{#4}%
+            \fi
+            \label{fig:#1}%
+          \end{figure}%
+        }{%
+          \markdownInput{#3}%
+        }%
+      }%
+    }
   }
 }
+
+\begingroup
+\catcode`\@=11
+\catcode`\%=12
+\catcode`\^^A=14
+\global\def\markdownRendererContentBlockOnlineImage#1#2#3#4{^^A
+  \immediate\write18{^^A
+    if printf '%s' "#3" | grep -q ^http; then
+      OUTPUT="$(printf '%s' "#3" | md5sum |
+                cut -d' ' -f1).^^A
+              $(printf '%s' "#3" |
+                sed 's/.*[.]//')";
+      if ! [ -e "$OUTPUT" ]; then
+        wget -O "$OUTPUT" '#3' || rm "$OUTPUT";
+        convert "$OUTPUT" png:"$OUTPUT";
+      fi;
+      printf '%s%%' "$OUTPUT" > \jobname.fetched;
+    else
+      printf '%s%%' "#3"      > \jobname.fetched;
+    fi}^^A
+  {\everyeof={\noexpand}^^A
+  \edef\filename{\@@input"\jobname.fetched" }^^A
+  \begin{figure}^^A
+    \begin{center}^^A
+      \includegraphics[width=0.75\textwidth]{\filename}^^A
+    \end{center}
+    \ifx\empty#4\empty\else
+      \caption{#4}^^A
+    \fi
+    \label{fig:#1}^^A
+  \end{figure}^^A
+  }^^A
+}^^A
+\endgroup
 
 % Bibliography setup
 \usepackage{filecontents}
@@ -147,13 +218,12 @@
   url           =   {http://luatex.org/},
   langid        =   {english}}
 
-@ONLINE{overleaf16,
-  author        =   {{Overleaf}},
-  year          =   {2016},
-  title         =   {Two great examples of how to use \#markdown with @Overleaf
-                     -- thanks @liantze!},
-  urldate       =   {2016-08-15},
-  url           =   {https://twitter.com/overleaf/status/763395560682364928},
+@ONLINE{overleaf17,
+  author        =   {Lian Tze Lim},
+  year          =   {2017},
+  title         =   {Markdown into \LaTeX{} with Style},
+  urldate       =   {2017-04-28},
+  url           =   {https://www.overleaf.com/blog/501-markdown-into-latex-with-style},
   langid        =   {english}}
 
 @BOOK{downey16,
@@ -214,12 +284,12 @@
                      \url{https://gitlab.fi.muni.cz/xnovot32/markdown}},
   langid        =   {english}}
 
-@MANUAL{novotny16-2,
+@MANUAL{novotny17,
   author        =   {Novotný, Vít},
-  year          =   {2016},
+  year          =   {2017},
   title         =   {A Markdown Interpreter for \TeX{}},
   url           =   {http://mirrors.ctan.org/macros/generic/markdown/markdown.pdf},
-  urldate       =   {2016-08-17},
+  urldate       =   {2017-04-26},
   langid        =   {english}}
 
 @ONLINE{novotny16-3,
@@ -250,12 +320,203 @@
 ]{biblatex}
 \addbibresource{main.bib}
 
+% Block diagram
+\usepackage{tikz}
+\begin{filecontents}{block-diagram.tex}
+\centering
+\ifx\du\undefined
+  \newlength{\du}
+\fi
+\setlength{\du}{9.7\unitlength}
+\vspace{1.5mm}
+\begin{tikzpicture}
+\pgftransformxscale{1.400000}
+\pgftransformyscale{-1.23800}
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\definecolor{dialinecolor}{rgb}{1.000000, 1.000000, 1.000000}
+\pgfsetfillcolor{dialinecolor}
+\definecolor{dialinecolor}{rgb}{1.000000, 1.000000, 1.000000}
+\pgfsetfillcolor{dialinecolor}
+\fill (4.282853\du,-3.750000\du)--(4.282853\du,-1.850000\du)--(11.971656\du,-1.850000\du)--(11.971656\du,-3.750000\du)--cycle;
+\pgfsetlinewidth{0.040000\du}
+\pgfsetdash{}{0pt}
+\pgfsetdash{}{0pt}
+\pgfsetmiterjoin
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\draw (4.282853\du,-3.750000\du)--(4.282853\du,-1.850000\du)--(11.971656\du,-1.850000\du)--(11.971656\du,-3.750000\du)--cycle;
+% setfont left to latex
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\node at (8.127254\du,-2.705000\du){\LaTeX{} Interface};
+\definecolor{dialinecolor}{rgb}{1.000000, 1.000000, 1.000000}
+\pgfsetfillcolor{dialinecolor}
+\fill (-5.055135\du,-3.788555\du)--(-5.055135\du,-1.888555\du)--(2.894865\du,-1.888555\du)--(2.894865\du,-3.788555\du)--cycle;
+\pgfsetlinewidth{0.040000\du}
+\pgfsetdash{}{0pt}
+\pgfsetdash{}{0pt}
+\pgfsetmiterjoin
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\draw (-5.055135\du,-3.788555\du)--(-5.055135\du,-1.888555\du)--(2.894865\du,-1.888555\du)--(2.894865\du,-3.788555\du)--cycle;
+% setfont left to latex
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\node at (-1.080135\du,-2.743555\du){\Hologo{ConTeXt} Interface};
+\definecolor{dialinecolor}{rgb}{1.000000, 1.000000, 1.000000}
+\pgfsetfillcolor{dialinecolor}
+\fill (-8.200000\du,-0.224996\du)--(-8.200000\du,1.675004\du)--(11.870000\du,1.675004\du)--(11.870000\du,-0.224996\du)--cycle;
+\pgfsetlinewidth{0.040000\du}
+\pgfsetdash{}{0pt}
+\pgfsetdash{}{0pt}
+\pgfsetmiterjoin
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\draw (-8.200000\du,-0.224996\du)--(-8.200000\du,1.675004\du)--(11.870000\du,1.675004\du)--(11.870000\du,-0.224996\du)--cycle;
+% setfont left to latex
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\node at (1.835000\du,0.820004\du){Plain \TeX{} Interface};
+\definecolor{dialinecolor}{rgb}{1.000000, 1.000000, 1.000000}
+\pgfsetfillcolor{dialinecolor}
+\fill (-11.150000\du,3.325006\du)--(-11.150000\du,5.225006\du)--(11.800000\du,5.225006\du)--(11.800000\du,3.325006\du)--cycle;
+\pgfsetlinewidth{0.040000\du}
+\pgfsetdash{}{0pt}
+\pgfsetdash{}{0pt}
+\pgfsetmiterjoin
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\draw (-11.150000\du,3.325006\du)--(-11.150000\du,5.225006\du)--(11.800000\du,5.225006\du)--(11.800000\du,3.325006\du)--cycle;
+% setfont left to latex
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\node at (0.325000\du,4.370006\du){Lua Interface};
+\pgfsetlinewidth{0.040000\du}
+\pgfsetdash{}{0pt}
+\pgfsetdash{}{0pt}
+\pgfsetbuttcap
+{
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetfillcolor{dialinecolor}
+% was here!!!
+\pgfsetarrowsstart{stealth}
+\pgfsetarrowsend{stealth}
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\draw (-9.906400\du,-5.181570\du)--(-9.937836\du,3.024193\du);
+}
+\pgfsetlinewidth{0.040000\du}
+\pgfsetdash{}{0pt}
+\pgfsetdash{}{0pt}
+\pgfsetbuttcap
+{
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetfillcolor{dialinecolor}
+% was here!!!
+\pgfsetarrowsstart{stealth}
+\pgfsetarrowsend{stealth}
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\draw (-6.919693\du,-5.181570\du)--(-6.938734\du,-0.450800\du);
+}
+\pgfsetlinewidth{0.040000\du}
+\pgfsetdash{}{0pt}
+\pgfsetdash{}{0pt}
+\pgfsetbuttcap
+{
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetfillcolor{dialinecolor}
+% was here!!!
+\pgfsetarrowsstart{stealth}
+\pgfsetarrowsend{stealth}
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\draw (-1.063746\du,-5.175791\du)--(-1.063746\du,-3.975793\du);
+}
+\definecolor{dialinecolor}{rgb}{1.000000, 1.000000, 1.000000}
+\pgfsetfillcolor{dialinecolor}
+\fill (-10.972500\du,-7.267480\du)--(-10.972500\du,-5.367480\du)--(11.977500\du,-5.367480\du)--(11.977500\du,-7.267480\du)--cycle;
+\pgfsetlinewidth{0.040000\du}
+\pgfsetdash{}{0pt}
+\pgfsetdash{}{0pt}
+\pgfsetmiterjoin
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\draw (-10.972500\du,-7.267480\du)--(-10.972500\du,-5.367480\du)--(11.977500\du,-5.367480\du)--(11.977500\du,-7.267480\du)--cycle;
+% setfont left to latex
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\node at (0.502500\du,-6.322480\du){User Code};
+\pgfsetlinewidth{0.040000\du}
+\pgfsetdash{}{0pt}
+\pgfsetdash{}{0pt}
+\pgfsetbuttcap
+{
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetfillcolor{dialinecolor}
+% was here!!!
+\pgfsetarrowsstart{stealth}
+\pgfsetarrowsend{stealth}
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\draw (8.149986\du,-5.159541\du)--(8.149986\du,-3.959543\du);
+}
+\pgfsetlinewidth{0.040000\du}
+\pgfsetdash{}{0pt}
+\pgfsetdash{}{0pt}
+\pgfsetbuttcap
+{
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetfillcolor{dialinecolor}
+% was here!!!
+\pgfsetarrowsstart{stealth}
+\pgfsetarrowsend{stealth}
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\draw (-1.074995\du,-1.634548\du)--(-1.074995\du,-0.434550\du);
+}
+\pgfsetlinewidth{0.040000\du}
+\pgfsetdash{}{0pt}
+\pgfsetdash{}{0pt}
+\pgfsetbuttcap
+{
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetfillcolor{dialinecolor}
+% was here!!!
+\pgfsetarrowsstart{stealth}
+\pgfsetarrowsend{stealth}
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\draw (8.138736\du,-1.618298\du)--(8.138736\du,-0.418300\du);
+}
+\pgfsetlinewidth{0.040000\du}
+\pgfsetdash{}{0pt}
+\pgfsetdash{}{0pt}
+\pgfsetbuttcap
+{
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetfillcolor{dialinecolor}
+% was here!!!
+\pgfsetarrowsstart{stealth}
+\pgfsetarrowsend{stealth}
+\definecolor{dialinecolor}{rgb}{0.000000, 0.000000, 0.000000}
+\pgfsetstrokecolor{dialinecolor}
+\draw (1.689638\du,1.881695\du)--(1.689638\du,3.081693\du);
+}
+\end{tikzpicture}\vskip-0.4em
+\end{filecontents}
+
+% PDF comments
+\usepackage[author={Vít Novotný}, color=yellow]{pdfcomment}
+
 % Miscellaneous packages and other setup
 \ifx\ifdarkframes\undefined
   \expandafter\newif\csname ifdarkframes\endcsname
   \darkframestrue
 \fi
 \usepackage{minted}
+\usepackage{hologo}
 \usemintedstyle{\ifdarkframes monokai\else murphy\fi}
 \frenchspacing
 \usepackage{pgffor}
@@ -269,14 +530,15 @@
 
 % Metadata
 \title{
-  A \texorpdfstring{%
+  Using \texorpdfstring{%
     \raisebox{-1.7mm}{\includegraphics[scale=0.2]{markdown-mark}}%
-  }{Markdown}\ Interpreter for \TeX}
+  }{Markdown} inside \textcolor{white}{\TeX{}} Documents}
 \subtitle{%
-  Project MUNI 33 / 12 2015
+  TUG@Bacho\TeX{} 2017
   \texorpdfstring{\url{https://github.com/witiko/markdown}}{}%
 }
 \author{Vít Novotný}
+
 \begin{document}
 \frame{\maketitle}
 \AtBeginSection[]{\frame{\sectionpage}}
@@ -296,15 +558,15 @@
 \begin{frame}
 
 ### \subsecname
-#### What is Wrong with \TeX?
+#### \TeX{} as a Content Creation Language
 
   1. High Markup to Text Ratio
-    * @knuth86 is 22\,\% markup.
-    * @downey16 is 21\,\% markup.
+    * ![knuth86]() is 22\,\% markup (plain \TeX{}).
+    * ![downey16]() is 21\,\% markup (\LaTeX{}).
   2. Zero Sandboxing Support
     * The document you are typesetting may not compile.
       ```tex
-      … a file named \texttt{evil_underscores.tex} …
+      \texttt{innocent_looking_underscores.tex}
       ```
     * The document you are typesetting may halt.
       ```tex
@@ -317,24 +579,6 @@
   3. Steep Learning Curve
 
 \end{frame}
-\iffalse
-\begin{frame}
-
-### \subsecname
-#### The Language of Markdown
-
-> The overriding design goal for Markdown’s formatting syntax is to make it
-> *as readable as possible*. The idea is that a Markdown-formatted document
-> should be _publishable as-is, as plain text_, without looking like it’s been
-> marked up with tags or formatting instructions. While Markdown’s syntax has
-> been influenced by several existing text-to-HTML filters, the single
-> biggest source of inspiration for Markdown’s syntax is *the format of plain
-> text email*.
-
-\hfill --- @gruber04, emphasis mine
-
-\end{frame}
-\fi
 \begin{frame}
 
 ### \subsecname
@@ -383,17 +627,16 @@ This is a text paragraph with _emphasis_.
 \begin{frame}
 
 ### \subsecname
-#### How is Markdown Useful?
+#### Markdown as a Content Creation Language
 
   1. Minimal Markup to Text Ratio
     * Recall: @knuth86 and @downey16 are _\textasciitilde 22\,\% markup_.
-    * @gillespie16 is 5.5\,\% markup.
-    * @grolemund16 is 3.8\,\% markup.
-  2. Sandboxing Support
+    * ![gillespie16]() is 5.5\,\% markup.
+    * ![grolemund16]() is 3.8\,\% markup.
+  2. **Either** Sandboxing Support …
     * A Markdown document converted to \TeX{} will always compile.
     * The document may neither halt nor access the shell.
-  3. Hybrid Markup Support
-    * Markdown was designed to supplement HTML, not replace it.
+  3. … **or** Hybrid Markup Support
     * Structurally simple sections can use pure Markdown, complex sections
       may combine Markdown and the host markup.
   4. Mild Learning Curve
@@ -416,15 +659,15 @@ This is a text paragraph with _emphasis_.
   * Supports tens of markup languages (Markdown, \LaTeX, HTML, XML Docbook)
     and output formats (ODF, OOXML, PDF).
   * The use of Pandoc for the preparation of \LaTeX{} documents has been
-    described by @dominici14\.
+    described in TUGBoat by @dominici14\.
 
 \end{frame}
 \begin{frame}
 
 ### \subsecname
-#### What is Wrong with Pandoc?
+#### Why Is Pandoc Not Ideal?
 
-  1. No Way to Change Output Markup
+  1. Difficult to Change Output Markup
     ```markdown
     # Heading {#link}
     This is [a link](#link).
@@ -442,7 +685,7 @@ This is a text paragraph with _emphasis_.
 \begin{frame}
 
 ### \subsecname
-#### What is Wrong with Pandoc?
+#### Why Is Pandoc Not Ideal?
 
   3. Half-hybrid, Half-sandboxed
     * The input is heuristically parsed and sanitized:
@@ -464,7 +707,7 @@ This is a text paragraph with _emphasis_.
 
 \end{frame}
 
-# The Markdown Package
+# The \texttt{markdown.tex} Package
 ## Building a Parser
 
 \begin{frame}
@@ -483,11 +726,8 @@ and a parser needs to be able to backtrack over the entire input:
 [this is not a link](http://link.com/ "Title"
 ```
 
-Implementing a recursive-descent parser with backtracking in \TeX{} is
-possible, but generally a bad idea:
-
-  * Difficult to Maintain, Highly Unidiomatic
-  * Lack of Efficient Data Structures
+Implementing such a parser in \TeX{} is possible, but generally a bad idea due
+to the lack of efficient data structures.
 
 \end{frame}
 \begin{frame}
@@ -534,26 +774,22 @@ possible, but generally a bad idea:
 ### \subsecname
 #### The Lunamark Library
 
-  * Lunamark [@macfarlane16-2] is a Markdown parser for Lua.
+  * Lunamark [@macfarlane16-2] is a Markdown parser in Lua.
   * The language is specified using a Parsing Expression Grammar
-    (PEG) via the LPeg C library (with some cheating).
-    * PEGs are CFGs with ordered choice; as a corrolary, any PEG is
-      unambiguous. [@ford04] An input word $u$ can be parsed according to a PEG
-      $G$ in linear time relative to the size of $u$. [@ford02] It is
-      conjectured that not all CFLs are recognized by a PEG.
-    * The dependencies of Lunamark were all either
-      compiled into Lua\TeX{}
-    (LPeg, Slnunicode), or unneeded (Cosmo, Alt-getopt).
+    (PEG) via the LPeg C library (and a bit of cheating).
+  * The dependencies of Lunamark were all either
+    compiled into Lua\TeX{}
+    (LPeg, Slnunicode), or unnecessary (Cosmo, Alt-getopt).
   * The library has been released under the Expat (MIT) License.
 
 \end{frame}
 \begin{frame}
 
 ### \subsecname
-#### The Lunamark Library
+#### A High-Level Overview
 
-The modified version of Lunamark produces a parse tree rather than presentation
-markup:
+A modified version of Lunamark transforms an input Markdown document into a
+plain \TeX{} document that encodes its structure:
 
 ```markdown
 # Heading
@@ -565,15 +801,95 @@ This is [a link](#link).
 This is \markdownRendererLink{a link}{#link}{#link}{}.
 ```
 
-The Markdown \TeX{} package:
-
-  * converts a Markdown document to the parse tree via Lunamark,
-  * defines the macros and typesets the parse tree using \TeX{}.
+A plain \TeX{} macro package defines the `\markdownRenderer`\ldots{} macros and
+typesets the above document.
 
 \end{frame}
 
-## Using Markdown from Within \LaTeX
+\markdownEnd
+\begin{markdown}
+## Quick Overview of the Package
+\global\def\subsecname{Quick Overview of the Package}
 
+\begin{frame}
+
+### \subsecname
+#### A Block Diagram of the Package
+
+\input block-diagram %
+
+\end{frame}
+\begin{frame}
+
+### \subsecname
+#### The Lua Interface
+
+```lua
+#/usr/bin/env texlua
+local kpse = require"kpse"
+kpse.set_program_name"kpsewhich"
+local markdown = require"markdown"
+local convert = markdown.new({ something = true })
+local input = "Some _Markdown_ text."
+print(convert(input))
+```
+
+\end{frame}
+\begin{frame}
+
+### \subsecname
+#### The Plain \TeX{} Interface
+
+```tex
+\input markdown %
+\def\markdownOptionSomething{true}%
+\def\markdownRendererSomethingElse#1#2#3{\foo{#1}}%
+\markdownInput{bar.md}
+\markdownBegin
+Some _Markdown_ text.
+\markdownEnd
+\bye
+```
+
+\end{frame}
+\begin{frame}
+
+### \subsecname
+#### The \Hologo{ConTeXt} Interface
+
+```tex
+\usemodule[t][markdown]
+\def\markdownOptionSomething{true}
+\def\markdownRendererSomethingElse#1#2#3{\foo{#1}}
+\starttext
+\markdownInput{bar.md}
+\startmarkdown
+Some _Markdown_ text.
+\stopmarkdown
+\stoptext
+```
+
+\end{frame}
+\end{markdown}
+\markdownBegin
+\begin{frame}
+
+### \subsecname
+#### The \LaTeX2e{} Interface
+
+```tex
+\documentclass{article}
+\usepackage[something]{markdown}
+\markdownSetup{renderers = {somethingElse = {\foo{#1}}}}
+\begin{document}
+\markdownInput{bar.md}
+\begin{markdown}
+Some _Markdown_ text.
+\end{markdown}
+\end{document}
+```
+
+\end{frame}
 \begin{frame}
 
 ### \subsecname
@@ -622,11 +938,29 @@ Foo bar\footnote[frame]{See \url{http://link.com} (Link)}.
 #### Syntax Extensions
 
   * Some syntax extensions were already supported by Lunamark:
+    * HTML,
     * footnotes,
     * definition lists,
   * New syntax extensions were added as a part of the project:
     * citations,
-    * fenced code blocks.
+    * fenced code blocks,
+    * IA\,Writer content blocks.
+
+\end{frame}
+\begin{frame}
+
+### \subsecname
+#### Syntax Extensions -- `\markdownSetup{html}`
+
+```html
+HTML <b>tags</b> such as &lt;b&gt; are recognized
+<!-- and comments are just ignored-->.
+```
+
+\vfill
+  
+HTML <b>tags</b> such as &lt;b&gt; are recognized<!--
+and comments are just ignored-->.
 
 \end{frame}
 \begin{frame}
@@ -731,6 +1065,69 @@ else
 ~~~~~~
 
 \end{frame}
+\begin{frame}
+
+### \subsecname
+#### Syntax Extensions -- `\markdownSetup{contentBlocks}` I
+
+```
+/Flowchart.png "Engineering Flowchart"
+```
+
+\vfill
+
+/Flowchart.png "Engineering Flowchart"
+
+\end{frame}
+\begin{frame}
+
+### \subsecname
+#### Syntax Extensions -- `\markdownSetup{contentBlocks}` II
+
+```
+/Scientists.csv (Great Minds of the 19th Century)
+```
+
+\vfill
+
+/Scientists.csv (Great Minds of the 19th Century)
+
+
+\end{frame}
+\begin{frame}
+
+### \subsecname
+#### Syntax Extensions -- `\markdownSetup{contentBlocks}` III
+
+```
+/chapters/01.txt
+/chapters/02.txt
+```
+
+\vfill
+
+/chapters/01.txt
+/chapters/02.txt
+
+\end{frame}
+\begin{frame}
+
+### \subsecname
+#### Syntax Extensions -- `\markdownSetup{contentBlocks}` IV
+
+```
+https://tug.org/tugboat/noword.jpg
+(The Communications of the \TeX{} Users Group)
+```
+
+\vfill
+
+https://tug.org/tugboat/noword.jpg
+(The Communications of the \TeX{} Users Group)
+
+(This actually does not work out-of-box at the moment.)
+
+\end{frame}
 
 # Conclusion
 
@@ -739,36 +1136,36 @@ else
 ### \secname
 #### The Missing Pieces of the Puzzle
 
- * Apart from the \LaTeX{} interface, the package also exposes Lua, plain
-   \TeX{} and Con\TeX t interfaces.
- * The package includes 82 pages of user and technical documentation.
-   [@novotny16-2]
- * A section on writing \LaTeX{} documents in Markdown was added to the
-   fithesis3 sample documents.
- * The package was released under the \LaTeX{} Project Public License (LPPL)
-   1.3 on the Comprehensive \TeX{} Archive Network (CTAN), GitHub, and the
-   faculty GitLab. [@novotny16-1] It is available in updated \TeX{} Live
-   2016.
+The \texttt{markdown.tex} package
+
+ * enables the use of Markdown in environments where tools from outside \TeX{}
+   distributions are unavailable,
+ * gives the authors full control over how individual Markdown elements are
+   rendered and how much access to \TeX{} markup the Markdown documents have,
+ * exposes Lua, plain \TeX{}, \LaTeX{}, and Con\TeX t interfaces.
+ * was released under the \LaTeX{} Project Public License (LPPL)
+   1.3 on the Comprehensive \TeX{} Archive Network (CTAN) and on GitHub
+   (\url{https://github.com/witiko/markdown}).
 
 \end{frame}
 \begin{frame}
 
 ### \secname
-#### Reception by the Community
+#### The Missing Pieces of the Puzzle
 
   * The syntax extensions were backported to Lunamark and merged by MacFarlane,
     resulting in a new minor version release of the library (0.5.0).
     [@novotny16-3]
-  * The package was featured on the twitter profile of Overleaf -- a major
-    online service for preparing \LaTeX{} documents -- along with original
-    example documents. [@overleaf16]
-  * The package was reviewed in the bulletin of the German \TeX{} Users Group
-    (DANTE e.V.). [@fenn16, pp. 43]
-  * An article about the package has been accepted for publication in the
-    bulletin of the Czechoslovak \TeX{} Users Group (CSTUG).
+  * The package was featured on the twitter profile and the blog of Overleaf --
+    a major online service for preparing \LaTeX{} documents -- along with
+    original example documents. [@overleaf17]
+  * \TeX\ comments in hybrid code behave in an unexpected way.
+  * Logging should be improved, so that programs such as \texttt{latexmk}
+    can automatically remove cache files that are no longer needed.
 
 \end{frame}
 
+# Q\&A
 # Bibliography
 
 \begin{frame}[allowframebreaks]
